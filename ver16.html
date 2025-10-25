@@ -1,0 +1,3269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALGOS - CPU Scheduling & Memory Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success-color: #059669;
+            --success-hover: #047857;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+            --danger-hover: #b91c1c;
+            --memory-color: #7c3aed;
+            --dark-bg: #1f2937;
+            --dark-card-bg: #374151;
+            --dark-text: #f9fafb;
+            --dark-text-secondary: #d1d5db;
+            --dark-border: #4b5563;
+            --dark-hover: #4b5563;
+            --light-bg: #f8fafc;
+            --light-card-bg: #ffffff;
+            --light-text: #1f2937;
+            --light-text-secondary: #6b7280;
+            --light-border: #e5e7eb;
+            --light-hover: #f1f5f9;
+            --accent-color: #3b82f6;
+            --classic-blue: #1e40af;
+            --classic-cyan: #0891b2;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: var(--dark-bg);
+            --card-bg: var(--dark-card-bg);
+            --text-color: var(--dark-text);
+            --text-secondary: var(--dark-text-secondary);
+            --border-color: var(--dark-border);
+            --hover-color: var(--dark-hover);
+        }
+
+        [data-theme="light"] {
+            --bg-color: var(--light-bg);
+            --card-bg: var(--light-card-bg);
+            --text-color: var(--light-text);
+            --text-secondary: var(--light-text-secondary);
+            --border-color: var(--light-border);
+            --hover-color: var(--light-hover);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 25px;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation Bar */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px 0;
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--classic-cyan);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 16px rgba(8, 145, 178, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .logo-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(8, 145, 178, 0.3);
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 4px;
+            transform: rotate(45deg);
+        }
+
+        .logo-icon::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: var(--classic-cyan);
+            border-radius: 3px;
+            z-index: 1;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--classic-cyan);
+            letter-spacing: -1px;
+            position: relative;
+        }
+
+        .logo-text::after {
+            content: 'Pro';
+            position: absolute;
+            top: -6px;
+            right: -25px;
+            font-size: 0.6rem;
+            background: #ef4444;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        /* Header Styles */
+        .title-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .title-section h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            color: var(--classic-blue);
+            letter-spacing: -2px;
+        }
+
+        .title-section .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--classic-blue);
+            color: white;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(30, 64, 175, 0.4);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+
+        .btn-success:hover {
+            background: var(--success-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+        }
+
+        .btn-memory {
+            background: var(--memory-color);
+            color: white;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-memory:hover {
+            background: #6d28d9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+        }
+
+        /* Plus and Minus Button Styles */
+        .btn-add {
+            background: var(--success-color);
+            color: white;
+            padding: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+            position: relative;
+            overflow: visible;
+        }
+
+        .btn-add::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: scale(0);
+            transition: transform 0.3s ease;
+        }
+
+        .btn-add:hover {
+            background: var(--success-hover);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+        }
+
+        .btn-add:hover::before {
+            transform: scale(1);
+        }
+
+        .btn-add:active {
+            transform: translateY(0) scale(0.95);
+        }
+
+        .btn-remove {
+            background: var(--danger-color);
+            color: white;
+            padding: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+            position: relative;
+            overflow: visible;
+        }
+
+        .btn-remove::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: scale(0);
+            transition: transform 0.3s ease;
+        }
+
+        .btn-remove:hover {
+            background: var(--danger-hover);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-remove:hover::before {
+            transform: scale(1);
+        }
+
+        .btn-remove:active {
+            transform: translateY(0) scale(0.95);
+        }
+
+        /* Memory-specific button variants */
+        .btn-add-memory {
+            background: var(--memory-color);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-add-memory:hover {
+            background: #6d28d9;
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+        }
+
+        /* Main Tabs */
+        .main-tabs {
+            display: flex;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .main-tab {
+            flex: 1;
+            padding: 18px 24px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            opacity: 0.7;
+        }
+
+        .main-tab::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: var(--classic-blue);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .main-tab.active {
+            color: var(--classic-blue);
+            background: rgba(30, 64, 175, 0.1);
+            opacity: 1;
+        }
+
+        .main-tab.active::after {
+            width: 80%;
+        }
+
+        .main-tab:hover:not(.active) {
+            color: var(--classic-blue);
+            background: rgba(30, 64, 175, 0.05);
+            opacity: 1;
+        }
+
+        .main-tab[data-tab="memory-management"] {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(30, 64, 175, 0.1));
+        }
+
+        .main-tab[data-tab="memory-management"].active {
+            color: var(--memory-color);
+            background: rgba(124, 58, 237, 0.15);
+        }
+
+        .main-tab[data-tab="memory-management"].active::after {
+            background: var(--memory-color);
+        }
+
+        /* Simulation Tabs */
+        .simulation-tabs {
+            display: none;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .simulation-tabs.active {
+            display: flex;
+        }
+
+        .sim-tab {
+            flex: 1;
+            padding: 18px 24px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            opacity: 0.7;
+        }
+
+        .sim-tab::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: var(--classic-blue);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .sim-tab.active {
+            color: var(--classic-blue);
+            background: rgba(30, 64, 175, 0.1);
+            opacity: 1;
+        }
+
+        .sim-tab.active::after {
+            width: 80%;
+        }
+
+        .sim-tab:hover:not(.active) {
+            color: var(--classic-blue);
+            background: rgba(30, 64, 175, 0.05);
+            opacity: 1;
+        }
+
+        /* Memory Simulation Tabs */
+        .memory-sim-tabs {
+            display: none;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), transparent);
+        }
+
+        .memory-sim-tabs.active {
+            display: flex;
+        }
+
+        .memory-sim-tab {
+            flex: 1;
+            padding: 18px 24px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            opacity: 0.7;
+        }
+
+        .memory-sim-tab::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: var(--memory-color);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .memory-sim-tab.active {
+            color: var(--memory-color);
+            background: rgba(124, 58, 237, 0.15);
+            opacity: 1;
+        }
+
+        .memory-sim-tab.active::after {
+            width: 80%;
+        }
+
+        .memory-sim-tab:hover:not(.active) {
+            color: var(--memory-color);
+            background: rgba(124, 58, 237, 0.08);
+            opacity: 1;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--classic-blue);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .memory-card::before {
+            background: var(--memory-color);
+        }
+
+        .card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--text-color);
+            font-weight: 700;
+        }
+
+        .card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        /* Algorithm Cards */
+        .algorithm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .algorithm-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid var(--border-color);
+            position: relative;
+            user-select: none;
+        }
+
+        .algorithm-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+            border-color: var(--classic-blue);
+        }
+
+        .algorithm-card:active {
+            transform: translateY(-6px) scale(0.98);
+        }
+
+        .algorithm-card.selected {
+            border-color: var(--classic-blue);
+            box-shadow: 0 12px 40px rgba(30, 64, 175, 0.3);
+            transform: translateY(-4px);
+        }
+
+        .memory-algorithm-card:hover {
+            border-color: var(--memory-color);
+        }
+
+        .memory-algorithm-card.selected {
+            border-color: var(--memory-color);
+            box-shadow: 0 12px 40px rgba(124, 58, 237, 0.3);
+        }
+
+        .algorithm-icon {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            position: relative;
+        }
+
+        .algorithm-content {
+            padding: 25px;
+            position: relative;
+        }
+
+        .algorithm-name {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: var(--text-color);
+        }
+
+        .algorithm-full-name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--classic-blue);
+        }
+
+        .memory-algorithm-card .algorithm-full-name {
+            color: var(--memory-color);
+        }
+
+        .algorithm-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .selection-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--classic-blue);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+        }
+
+        .memory-algorithm-card .selection-indicator {
+            background: var(--memory-color);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+        }
+
+        .algorithm-card.selected .selection-indicator {
+            display: flex;
+            animation: bounceIn 0.5s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--text-color);
+            min-width: 150px;
+        }
+
+        input,
+        select {
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--classic-blue);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+
+        .memory-input:focus {
+            border-color: var(--memory-color);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        /* Process Counter Display */
+        #process-count-display,
+        #memory-count-display,
+        #block-count-display {
+            background: var(--classic-blue);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+        }
+
+        #memory-count-display,
+        #block-count-display {
+            background: var(--memory-color);
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+        }
+
+        /* Tables */
+        .process-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .process-table th,
+        .process-table td {
+            padding: 16px;
+            text-align: center;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .process-table th {
+            background: var(--classic-blue);
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .memory-table th {
+            background: var(--memory-color);
+        }
+
+        .process-table td input {
+            border: none;
+            background: transparent;
+            text-align: center;
+            width: 100%;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .process-table tr:nth-child(even) {
+            background-color: var(--hover-color);
+        }
+
+        .process-table tr:hover {
+            background-color: rgba(30, 64, 175, 0.05);
+        }
+
+        /* Memory Visualization */
+        .memory-visualization {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+            min-height: 400px;
+        }
+
+        .memory-blocks-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(124, 58, 237, 0.05);
+            border-radius: 12px;
+            border: 2px dashed var(--memory-color);
+        }
+
+        .memory-block-visual {
+            background: var(--memory-color);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            min-width: 80px;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .memory-block-visual:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+        }
+
+        .memory-block-visual.allocated {
+            background: var(--success-color);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+
+        .memory-block-visual.allocated::before {
+            content: '✓ Allocated';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success-color);
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .allocation-result {
+            margin-top: 30px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .allocation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .allocation-item:last-child {
+            border-bottom: none;
+        }
+
+        .allocation-process {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .allocation-status {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .allocation-status.success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .allocation-status.failed {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        /* Results Styles */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--classic-blue);
+        }
+
+        .memory-metric-card::before {
+            background: var(--memory-color);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--classic-blue);
+            margin-bottom: 8px;
+        }
+
+        .memory-metric-card .metric-value {
+            color: var(--memory-color);
+        }
+
+        .metric-label {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Animated Gantt Chart Styles */
+        .gantt-chart {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .gantt-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .gantt-control-btn {
+            background: var(--classic-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+        }
+
+        .gantt-control-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+        }
+
+        .gantt-control-btn:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speed-slider {
+            width: 100px;
+            accent-color: var(--classic-blue);
+        }
+
+        .time-display {
+            background: var(--hover-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: var(--classic-blue);
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .gantt-timeline {
+            display: flex;
+            align-items: center;
+            min-height: 80px;
+            position: relative;
+            margin: 20px 0;
+            background: rgba(30, 64, 175, 0.05);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .gantt-bar {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 2px;
+            cursor: pointer;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            width: 0;
+            opacity: 0.3;
+        }
+
+        .gantt-bar.active {
+            opacity: 1;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            transform: scaleY(1.05);
+            z-index: 10;
+        }
+
+        .gantt-bar.completed {
+            opacity: 0.8;
+        }
+
+        .gantt-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .gantt-bar.active::before {
+            left: 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        .gantt-bar:hover {
+            transform: scaleY(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            z-index: 20;
+        }
+
+        .gantt-labels {
+            display: flex;
+            margin-top: 15px;
+        }
+
+        .gantt-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+            font-weight: 500;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .current-time-indicator {
+            position: absolute;
+            top: -5px;
+            bottom: -5px;
+            width: 3px;
+            background: #ef4444;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+            z-index: 100;
+            transition: left 0.1s ease;
+        }
+
+        .current-time-indicator::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -5px;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #ef4444;
+        }
+
+        /* History Table */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 16px;
+            text-align: left;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .history-table th {
+            background: var(--classic-blue);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .history-table tr:hover {
+            background-color: rgba(30, 64, 175, 0.05);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            margin-top: 30px;
+            padding: 20px 0;
+            border-top: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Back button */
+        .back-button {
+            background: var(--classic-blue);
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+        }
+
+        .memory-back-button {
+            background: var(--memory-color);
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+        }
+
+        .back-button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+        }
+
+        .memory-back-button:hover {
+            background: #6d28d9;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+        }
+
+        /* Two Column Layout */
+        .two-column-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .top-nav {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .nav-controls {
+                justify-content: center;
+            }
+
+            .title-section h1 {
+                font-size: 2.5rem;
+            }
+
+            .algorithm-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .main-tabs,
+            .simulation-tabs,
+            .memory-sim-tabs {
+                flex-direction: column;
+            }
+
+            .form-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .two-column-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .gantt-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            label {
+                min-width: auto;
+            }
+
+            .logo-text {
+                font-size: 1.5rem;
+            }
+
+            .logo-text::after {
+                right: -20px;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Hidden elements */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body data-theme="dark">
+    <div class="container">
+        <!-- All the existing HTML content remains the same until Gantt Chart section -->
+
+        <!-- Top Navigation -->
+        <div class="top-nav">
+            <div class="logo-container">
+                <div class="logo-icon"></div>
+                <div class="logo-text">ALGOS</div>
+            </div>
+
+            <div class="nav-controls">
+                <button class="btn btn-primary" onclick="showHelp()">❓ Help</button>
+                <button class="btn btn-primary" onclick="toggleTheme()">🌓 Toggle Theme</button>
+            </div>
+        </div>
+
+        <!-- Main Title Section -->
+        <div class="title-section">
+            <h1>ALGOS</h1>
+            <p class="subtitle">Comprehensive Operating System Algorithm Simulator - CPU Scheduling & Memory Management
+            </p>
+        </div>
+
+        <!-- Main Navigation Tabs -->
+        <nav class="main-tabs">
+            <button class="main-tab active" data-tab="cpu-scheduling" onclick="showMainTab('cpu-scheduling')">🖥️ CPU
+                Scheduling</button>
+            <button class="main-tab" data-tab="memory-management" onclick="showMainTab('memory-management')">💾 Memory
+                Management</button>
+            <button class="main-tab" data-tab="history" onclick="showMainTab('history')">📈 History</button>
+        </nav>
+
+        <!-- CPU Scheduling Simulation Tabs -->
+        <nav class="simulation-tabs" id="cpu-simulation-tabs">
+            <button class="sim-tab active" onclick="showSimTab('process-input')">📝 Process Input</button>
+            <button class="sim-tab" onclick="showSimTab('cpu-results')">📊 Results & Visualization</button>
+        </nav>
+
+        <!-- Memory Management Simulation Tabs -->
+        <nav class="memory-sim-tabs" id="memory-simulation-tabs">
+            <button class="memory-sim-tab active" onclick="showMemorySimTab('memory-input')">📝 Memory
+                Configuration</button>
+            <button class="memory-sim-tab" onclick="showMemorySimTab('memory-results')">📊 Results &
+                Visualization</button>
+        </nav>
+
+        <!-- CPU Scheduling Section -->
+        <div id="cpu-scheduling" class="tab-content active">
+            <div class="card">
+                <h2>Choose Your CPU Scheduling Algorithm</h2>
+                <p>Click on any algorithm card below to select it and start configuring your simulation. Each algorithm
+                    has different characteristics and performance metrics.</p>
+            </div>
+
+            <div class="algorithm-grid" id="cpu-algorithm-grid">
+                <!-- CPU Algorithm cards will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Memory Management Section -->
+        <div id="memory-management" class="tab-content">
+            <div class="card memory-card">
+                <h2>Choose Your Memory Management Algorithm</h2>
+                <p>Select a memory allocation algorithm to simulate how processes are allocated to memory blocks. Define
+                    your own memory blocks and processes to see real allocation behavior.</p>
+            </div>
+
+            <div class="algorithm-grid" id="memory-algorithm-grid">
+                <!-- Memory Algorithm cards will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="history" class="tab-content">
+            <div class="card">
+                <h2>Simulation History</h2>
+                <table class="history-table" id="history-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Type</th>
+                            <th>Algorithm</th>
+                            <th>Items</th>
+                            <th>Primary Metric</th>
+                            <th>Secondary Metric</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-tbody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--text-secondary);">
+                                No simulation history yet. Run some simulations to see them here.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CPU Process Input Tab -->
+        <div id="process-input" class="tab-content">
+            <div class="card">
+                <button class="back-button" onclick="goBackToSelection('cpu')">← Back to CPU Algorithms</button>
+                <h2 id="selected-cpu-algorithm-title">Selected Algorithm: None</h2>
+                <p>Configure the processes for your <span id="cpu-algorithm-name-display">selected algorithm</span>
+                    simulation.</p>
+            </div>
+
+            <div class="card">
+                <h3>Configure Processes</h3>
+
+                <div class="form-row">
+                    <label>Manage Processes:</label>
+                    <button class="btn-add" onclick="addProcessRow()" title="Add Process">+</button>
+                    <button class="btn-remove" onclick="removeProcessRow()" title="Remove Process">−</button>
+                    <span id="process-count-display">Processes: 0</span>
+                </div>
+
+                <div id="quantum-section" class="form-row hidden">
+                    <label for="time-quantum">Time Quantum:</label>
+                    <input type="number" id="time-quantum" min="1" value="2">
+                </div>
+
+                <div id="process-input-container">
+                    <!-- Process input table will be generated here -->
+                </div>
+
+                <button class="btn btn-primary" onclick="runCPUSimulation()"
+                    style="margin-top: 20px; display: block; margin-left: auto; margin-right: auto;">
+                    🚀 Run CPU Simulation
+                </button>
+            </div>
+        </div>
+
+        <!-- Memory Input Tab -->
+        <div id="memory-input" class="tab-content">
+            <div class="card memory-card">
+                <button class="back-button memory-back-button" onclick="goBackToSelection('memory')">← Back to Memory
+                    Algorithms</button>
+                <h2 id="selected-memory-algorithm-title">Selected Algorithm: None</h2>
+                <p>Configure memory blocks and processes for your <span id="memory-algorithm-name-display">selected
+                        algorithm</span> simulation.</p>
+            </div>
+
+            <!-- Two Column Layout for Memory Configuration -->
+            <div class="two-column-layout">
+                <!-- Left Column: Memory Blocks -->
+                <div class="card memory-card">
+                    <h3>1️⃣ Configure Memory Blocks</h3>
+                    <p>Define the available memory blocks with their sizes.</p>
+
+                    <div class="form-row">
+                        <label>Manage Memory Blocks:</label>
+                        <button class="btn-add btn-add-memory" onclick="addMemoryBlock()"
+                            title="Add Memory Block">+</button>
+                        <button class="btn-remove" onclick="removeMemoryBlock()" title="Remove Memory Block">−</button>
+                        <span id="block-count-display">Blocks: 0</span>
+                    </div>
+
+                    <div id="memory-blocks-container">
+                        <!-- Memory blocks table will be generated here -->
+                    </div>
+                </div>
+
+                <!-- Right Column: Memory Processes -->
+                <div class="card memory-card">
+                    <h3>2️⃣ Configure Memory Processes</h3>
+                    <p>Define the processes that need memory allocation.</p>
+
+                    <div class="form-row">
+                        <label>Manage Processes:</label>
+                        <button class="btn-add btn-add-memory" onclick="addMemoryProcess()"
+                            title="Add Memory Process">+</button>
+                        <button class="btn-remove" onclick="removeMemoryProcess()"
+                            title="Remove Memory Process">−</button>
+                        <span id="memory-count-display">Processes: 0</span>
+                    </div>
+
+                    <div id="memory-processes-container">
+                        <!-- Memory processes table will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memory Visualization -->
+            <div class="card memory-card">
+                <h3>3️⃣ Memory Blocks Preview</h3>
+                <div id="memory-blocks-display" class="memory-blocks-display">
+                    <div style="text-align: center; color: var(--text-secondary); width: 100%;">
+                        Add memory blocks to see them here
+                    </div>
+                </div>
+
+                <button class="btn btn-memory" onclick="runMemorySimulation()"
+                    style="margin-top: 20px; display: block; margin-left: auto; margin-right: auto;">
+                    🚀 Run Memory Allocation Simulation
+                </button>
+            </div>
+        </div>
+
+        <!-- CPU Results Tab -->
+        <div id="cpu-results" class="tab-content">
+            <div id="cpu-results-content">
+                <div class="card">
+                    <h2>Run a CPU simulation to see results here</h2>
+                    <p>Select a CPU scheduling algorithm, configure processes, and run the simulation to view detailed
+                        results and visualizations.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Memory Results Tab -->
+        <div id="memory-results" class="tab-content">
+            <div id="memory-results-content">
+                <div class="card memory-card">
+                    <h2>Run a memory simulation to see results here</h2>
+                    <p>Configure memory blocks and processes, then run the simulation to see which processes get
+                        allocated and which ones don't.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span id="status-text">Ready - Select CPU Scheduling or Memory Management to begin</span>
+            <span>ALGOS v4.0 - Enhanced Memory Block Management</span>
+        </div>
+    </div>
+
+    <script>
+        // Global Variables
+        let selectedCPUAlgorithm = null;
+        let selectedMemoryAlgorithm = null;
+        let simulationHistory = [];
+        let processData = [];
+        let memoryBlocks = [];
+        let memoryProcesses = [];
+        let inCPUSimulationMode = false;
+        let inMemorySimulationMode = false;
+        let currentProcessCount = 0;
+        let currentBlockCount = 0;
+        let currentMemoryProcessCount = 0;
+        let currentSimulationType = null;
+
+        // Animation Variables
+        let animationInterval = null;
+        let isAnimating = false;
+        let animationSpeed = 1000; // milliseconds per time unit
+        let currentAnimationTime = 0;
+        let maxAnimationTime = 0;
+        let ganttData = [];
+
+        // CPU Algorithm Data
+        const cpuAlgorithms = [
+            {
+                name: 'FCFS',
+                fullName: 'First Come First Serve',
+                description: 'Non-preemptive scheduling\nbased on arrival time',
+                icon: '📋',
+                color: '#059669',
+                requiresQuantum: false,
+                requiresPriority: false
+            },
+            {
+                name: 'SJF',
+                fullName: 'Shortest Job First',
+                description: 'Non-preemptive scheduling\nbased on burst time',
+                icon: '⚡',
+                color: '#2563eb',
+                requiresQuantum: false,
+                requiresPriority: false
+            },
+            {
+                name: 'SRTF',
+                fullName: 'Shortest Remaining Time First',
+                description: 'Preemptive version\nof SJF algorithm',
+                icon: '🔄',
+                color: '#d97706',
+                requiresQuantum: false,
+                requiresPriority: false
+            },
+            {
+                name: 'RR',
+                fullName: 'Round Robin',
+                description: 'Preemptive scheduling\nwith time quantum',
+                icon: '🎯',
+                color: '#7c3aed',
+                requiresQuantum: true,
+                requiresPriority: false
+            },
+            {
+                name: 'Priority',
+                fullName: 'Priority Scheduling',
+                description: 'Scheduling based on\nprocess priority',
+                icon: '⭐',
+                color: '#dc2626',
+                requiresQuantum: false,
+                requiresPriority: true
+            }
+        ];
+
+        // Memory Algorithm Data
+        const memoryAlgorithms = [
+            {
+                name: 'First Fit',
+                fullName: 'First Fit Memory Allocation',
+                description: 'Allocates first available\nblock that fits the request',
+                icon: '🔍',
+                color: '#059669'
+            },
+            {
+                name: 'Best Fit',
+                fullName: 'Best Fit Memory Allocation',
+                description: 'Allocates smallest block\nthat fits the request',
+                icon: '🎯',
+                color: '#7c3aed'
+            },
+            {
+                name: 'Worst Fit',
+                fullName: 'Worst Fit Memory Allocation',
+                description: 'Allocates largest available\nblock for the request',
+                icon: '📏',
+                color: '#dc2626'
+            }
+        ];
+
+        // Memory Management Classes (same as before)
+        class MemoryAllocator {
+            constructor(blockSizes) {
+                this.originalBlocks = [...blockSizes];
+                this.blocks = blockSizes.map((size, index) => ({
+                    id: index,
+                    size: size,
+                    allocated: false,
+                    processId: null
+                }));
+                this.allocatedProcesses = new Set();
+            }
+
+            firstFit(processes) {
+                const results = [];
+                const allocatedBlocks = new Set();
+
+                for (let i = 0; i < processes.length; i++) {
+                    const process = processes[i];
+                    let allocated = false;
+
+                    for (let j = 0; j < this.blocks.length; j++) {
+                        if (!allocatedBlocks.has(j) && process.size <= this.blocks[j].size) {
+                            allocatedBlocks.add(j);
+                            this.blocks[j].allocated = true;
+                            this.blocks[j].processId = process.name;
+                            allocated = true;
+
+                            results.push({
+                                process: process,
+                                allocated: true,
+                                blockId: j,
+                                blockSize: this.blocks[j].size,
+                                internalFragmentation: this.blocks[j].size - process.size
+                            });
+                            break;
+                        }
+                    }
+
+                    if (!allocated) {
+                        results.push({
+                            process: process,
+                            allocated: false,
+                            blockId: -1,
+                            blockSize: 0,
+                            internalFragmentation: 0
+                        });
+                    }
+                }
+
+                return results;
+            }
+
+            bestFit(processes) {
+                const results = [];
+                const allocatedBlocks = new Set();
+
+                const sortedBlockIndices = [...Array(this.blocks.length).keys()]
+                    .sort((a, b) => this.blocks[a].size - this.blocks[b].size);
+
+                for (let i = 0; i < processes.length; i++) {
+                    const process = processes[i];
+                    let allocated = false;
+                    let bestBlockIndex = -1;
+
+                    for (let j = 0; j < sortedBlockIndices.length; j++) {
+                        const blockIndex = sortedBlockIndices[j];
+                        if (!allocatedBlocks.has(blockIndex) && process.size <= this.blocks[blockIndex].size) {
+                            bestBlockIndex = blockIndex;
+                            break;
+                        }
+                    }
+
+                    if (bestBlockIndex !== -1) {
+                        allocatedBlocks.add(bestBlockIndex);
+                        this.blocks[bestBlockIndex].allocated = true;
+                        this.blocks[bestBlockIndex].processId = process.name;
+                        allocated = true;
+
+                        results.push({
+                            process: process,
+                            allocated: true,
+                            blockId: bestBlockIndex,
+                            blockSize: this.blocks[bestBlockIndex].size,
+                            internalFragmentation: this.blocks[bestBlockIndex].size - process.size
+                        });
+                    } else {
+                        results.push({
+                            process: process,
+                            allocated: false,
+                            blockId: -1,
+                            blockSize: 0,
+                            internalFragmentation: 0
+                        });
+                    }
+                }
+
+                return results;
+            }
+
+            worstFit(processes) {
+                const results = [];
+                const allocatedBlocks = new Set();
+
+                const sortedBlockIndices = [...Array(this.blocks.length).keys()]
+                    .sort((a, b) => this.blocks[b].size - this.blocks[a].size);
+
+                for (let i = 0; i < processes.length; i++) {
+                    const process = processes[i];
+                    let allocated = false;
+                    let worstBlockIndex = -1;
+
+                    for (let j = 0; j < sortedBlockIndices.length; j++) {
+                        const blockIndex = sortedBlockIndices[j];
+                        if (!allocatedBlocks.has(blockIndex) && process.size <= this.blocks[blockIndex].size) {
+                            worstBlockIndex = blockIndex;
+                            break;
+                        }
+                    }
+
+                    if (worstBlockIndex !== -1) {
+                        allocatedBlocks.add(worstBlockIndex);
+                        this.blocks[worstBlockIndex].allocated = true;
+                        this.blocks[worstBlockIndex].processId = process.name;
+                        allocated = true;
+
+                        results.push({
+                            process: process,
+                            allocated: true,
+                            blockId: worstBlockIndex,
+                            blockSize: this.blocks[worstBlockIndex].size,
+                            internalFragmentation: this.blocks[worstBlockIndex].size - process.size
+                        });
+                    } else {
+                        results.push({
+                            process: process,
+                            allocated: false,
+                            blockId: -1,
+                            blockSize: 0,
+                            internalFragmentation: 0
+                        });
+                    }
+                }
+
+                return results;
+            }
+
+            getMetrics(results) {
+                const allocated = results.filter(r => r.allocated);
+                const totalProcesses = results.length;
+                const allocatedProcesses = allocated.length;
+                const totalInternalFragmentation = allocated.reduce((sum, r) => sum + r.internalFragmentation, 0);
+                const allocatedBlocks = allocated.length;
+                const totalBlocks = this.blocks.length;
+
+                return {
+                    totalProcesses,
+                    allocatedProcesses,
+                    failedProcesses: totalProcesses - allocatedProcesses,
+                    allocationRate: ((allocatedProcesses / totalProcesses) * 100).toFixed(1),
+                    totalInternalFragmentation,
+                    averageInternalFragmentation: allocatedProcesses > 0 ? (totalInternalFragmentation / allocatedProcesses).toFixed(1) : 0,
+                    memoryUtilization: ((allocatedBlocks / totalBlocks) * 100).toFixed(1)
+                };
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function () {
+            createCPUAlgorithmCards();
+            createMemoryAlgorithmCards();
+            updateStatus('Ready - Select CPU Scheduling or Memory Management to begin');
+        });
+
+        // Animation Functions
+        function startGanttAnimation() {
+            if (isAnimating || !ganttData.length) return;
+
+            isAnimating = true;
+            currentAnimationTime = 0;
+
+            // Reset all bars
+            const bars = document.querySelectorAll('.gantt-bar');
+            bars.forEach(bar => {
+                bar.style.width = '0px';
+                bar.classList.remove('active', 'completed');
+            });
+
+            // Update control buttons
+            updateAnimationControls();
+
+            // Start animation interval
+            animationInterval = setInterval(() => {
+                updateGanttAnimation();
+            }, Math.max(50, animationSpeed / 10));
+        }
+
+        function pauseGanttAnimation() {
+            isAnimating = false;
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+            updateAnimationControls();
+        }
+
+        function resetGanttAnimation() {
+            pauseGanttAnimation();
+            currentAnimationTime = 0;
+
+            const bars = document.querySelectorAll('.gantt-bar');
+            bars.forEach(bar => {
+                bar.style.width = '0px';
+                bar.classList.remove('active', 'completed');
+            });
+
+            updateTimeDisplay();
+            updateCurrentTimeIndicator();
+            updateAnimationControls();
+        }
+
+        function updateGanttAnimation() {
+            const timeStep = 0.1; // Smaller steps for smoother animation
+            currentAnimationTime += timeStep;
+
+            let hasActiveProcess = false;
+
+            ganttData.forEach((item, index) => {
+                const bar = document.getElementById(`gantt-bar-${index}`);
+                if (!bar) return;
+
+                const duration = item.end - item.start;
+                const expectedWidth = duration * 50;
+
+                if (currentAnimationTime >= item.start && currentAnimationTime <= item.end) {
+                    // Currently running process
+                    const progress = (currentAnimationTime - item.start) / duration;
+                    const currentWidth = Math.min(expectedWidth * progress, expectedWidth);
+                    bar.style.width = `${currentWidth}px`;
+                    bar.classList.add('active');
+                    bar.classList.remove('completed');
+                    hasActiveProcess = true;
+                } else if (currentAnimationTime > item.end) {
+                    // Completed process
+                    bar.style.width = `${expectedWidth}px`;
+                    bar.classList.remove('active');
+                    bar.classList.add('completed');
+                } else {
+                    // Not started yet
+                    bar.style.width = '0px';
+                    bar.classList.remove('active', 'completed');
+                }
+            });
+
+            updateTimeDisplay();
+            updateCurrentTimeIndicator();
+
+            // Stop animation when complete
+            if (currentAnimationTime >= maxAnimationTime) {
+                pauseGanttAnimation();
+            }
+        }
+
+        function updateTimeDisplay() {
+            const timeDisplay = document.getElementById('current-time');
+            if (timeDisplay) {
+                timeDisplay.textContent = `Time: ${currentAnimationTime.toFixed(1)}`;
+            }
+        }
+
+        function updateCurrentTimeIndicator() {
+            const indicator = document.getElementById('time-indicator');
+            if (indicator) {
+                const position = currentAnimationTime * 50; // 50px per time unit
+                indicator.style.left = `${position}px`;
+            }
+        }
+
+        function updateAnimationControls() {
+            const playBtn = document.getElementById('play-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+
+            if (playBtn && pauseBtn) {
+                playBtn.disabled = isAnimating || currentAnimationTime >= maxAnimationTime;
+                pauseBtn.disabled = !isAnimating;
+            }
+        }
+
+        function updateAnimationSpeed() {
+            const slider = document.getElementById('speed-slider');
+            if (slider) {
+                animationSpeed = 2000 - parseInt(slider.value); // Invert so higher values = faster
+            }
+        }
+
+        // Theme Management
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+        }
+
+        // Create Animated Gantt Chart
+        function createAnimatedGanttChart(ganttDataInput) {
+            ganttData = ganttDataInput;
+            maxAnimationTime = Math.max(...ganttData.map(item => item.end));
+            currentAnimationTime = 0;
+            isAnimating = false;
+
+            const colors = ['#059669', '#2563eb', '#d97706', '#7c3aed', '#dc2626', '#0891b2', '#16a34a', '#ea580c'];
+            const processColors = {};
+            let colorIndex = 0;
+
+            // Controls HTML
+            let controlsHTML = `
+                <div class="gantt-controls">
+                    <button id="play-btn" class="gantt-control-btn" onclick="startGanttAnimation()">▶️ Play</button>
+                    <button id="pause-btn" class="gantt-control-btn" onclick="pauseGanttAnimation()" disabled>⏸️ Pause</button>
+                    <button id="reset-btn" class="gantt-control-btn" onclick="resetGanttAnimation()">🔄 Reset</button>
+                    
+                    <div class="speed-control">
+                        <label>Speed:</label>
+                        <input type="range" id="speed-slider" class="speed-slider" min="200" max="1800" value="1000" onchange="updateAnimationSpeed()">
+                        <span>Fast</span>
+                    </div>
+                    
+                    <div id="current-time" class="time-display">Time: 0.0</div>
+                </div>
+            `;
+
+            // Timeline HTML
+            let ganttHTML = '<div class="gantt-timeline" style="position: relative;">';
+            ganttHTML += '<div id="time-indicator" class="current-time-indicator" style="left: 0px;"></div>';
+
+            ganttData.forEach((item, index) => {
+                if (!processColors[item.pid]) {
+                    processColors[item.pid] = colors[colorIndex % colors.length];
+                    colorIndex++;
+                }
+
+                const duration = item.end - item.start;
+
+                ganttHTML += `
+                    <div id="gantt-bar-${index}" class="gantt-bar" 
+                         style="background: ${processColors[item.pid]};"
+                         title="${item.pid}: ${item.start}-${item.end}">
+                        ${item.pid}
+                    </div>
+                `;
+            });
+
+            ganttHTML += '</div>';
+
+            // Labels HTML  
+            let labelsHTML = '<div class="gantt-labels">';
+
+            ganttData.forEach((item, index) => {
+                const duration = item.end - item.start;
+                const width = duration * 50;
+                labelsHTML += `<div class="gantt-label" style="width: ${width}px;">${item.start}-${item.end}</div>`;
+            });
+
+            labelsHTML += '</div>';
+
+            return controlsHTML + ganttHTML + labelsHTML;
+        }
+
+        // All the existing functions remain the same
+
+        // Main Tab Management
+        function showMainTab(tabName) {
+            exitAllSimulationModes();
+
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            const mainTabButtons = document.querySelectorAll('.main-tab');
+            mainTabButtons.forEach(button => button.classList.remove('active'));
+
+            document.getElementById(tabName).classList.add('active');
+
+            const clickedButton = document.querySelector(`[data-tab="${tabName}"]`);
+            if (clickedButton) {
+                clickedButton.classList.add('active');
+            }
+
+            updateStatus(`Viewing ${tabName.replace('-', ' ')} section`);
+        }
+
+        // CPU Simulation Tab Management
+        function showSimTab(tabName) {
+            if (!inCPUSimulationMode) return;
+
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            const simTabButtons = document.querySelectorAll('.sim-tab');
+            simTabButtons.forEach(button => button.classList.remove('active'));
+
+            document.getElementById(tabName).classList.add('active');
+
+            event.target.classList.add('active');
+
+            updateStatus(`${tabName === 'process-input' ? 'Configure processes' : 'View CPU results'}`);
+        }
+
+        // Memory Simulation Tab Management
+        function showMemorySimTab(tabName) {
+            if (!inMemorySimulationMode) return;
+
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            const memorySimTabButtons = document.querySelectorAll('.memory-sim-tab');
+            memorySimTabButtons.forEach(button => button.classList.remove('active'));
+
+            document.getElementById(tabName).classList.add('active');
+
+            event.target.classList.add('active');
+
+            updateStatus(`${tabName === 'memory-input' ? 'Configure memory' : 'View memory results'}`);
+        }
+
+        // Enter CPU Simulation Mode
+        function enterCPUSimulationMode() {
+            exitAllSimulationModes();
+            inCPUSimulationMode = true;
+            currentSimulationType = 'cpu';
+
+            document.querySelector('.main-tabs').style.display = 'none';
+            document.getElementById('cpu-simulation-tabs').classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById('process-input').classList.add('active');
+
+            document.querySelectorAll('.sim-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.sim-tab')[0].classList.add('active');
+        }
+
+        // Enter Memory Simulation Mode
+        function enterMemorySimulationMode() {
+            exitAllSimulationModes();
+            inMemorySimulationMode = true;
+            currentSimulationType = 'memory';
+
+            document.querySelector('.main-tabs').style.display = 'none';
+            document.getElementById('memory-simulation-tabs').classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById('memory-input').classList.add('active');
+
+            document.querySelectorAll('.memory-sim-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.memory-sim-tab')[0].classList.add('active');
+        }
+
+        // Exit All Simulation Modes
+        function exitAllSimulationModes() {
+            inCPUSimulationMode = false;
+            inMemorySimulationMode = false;
+            currentSimulationType = null;
+
+            // Stop any running animations
+            pauseGanttAnimation();
+
+            document.querySelector('.main-tabs').style.display = 'flex';
+            document.getElementById('cpu-simulation-tabs').classList.remove('active');
+            document.getElementById('memory-simulation-tabs').classList.remove('active');
+
+            document.querySelectorAll('.main-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.main-tab')[0].classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById('cpu-scheduling').classList.add('active');
+        }
+
+        // Create CPU Algorithm Cards
+        function createCPUAlgorithmCards() {
+            const container = document.getElementById('cpu-algorithm-grid');
+            container.innerHTML = '';
+
+            cpuAlgorithms.forEach(algorithm => {
+                const card = document.createElement('div');
+                card.className = 'algorithm-card';
+                card.setAttribute('data-algorithm', algorithm.name);
+                card.onclick = () => selectCPUAlgorithmAndNavigate(algorithm.name);
+
+                card.innerHTML = `
+                    <div class="algorithm-icon" style="background: ${algorithm.color}">
+                        ${algorithm.icon}
+                    </div>
+                    <div class="algorithm-content">
+                        <div class="algorithm-name">${algorithm.name}</div>
+                        <div class="algorithm-full-name">${algorithm.fullName}</div>
+                        <div class="algorithm-desc">${algorithm.description.replace('\\n', '<br>')}</div>
+                    </div>
+                    <div class="selection-indicator">✓</div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Create Memory Algorithm Cards
+        function createMemoryAlgorithmCards() {
+            const container = document.getElementById('memory-algorithm-grid');
+            container.innerHTML = '';
+
+            memoryAlgorithms.forEach(algorithm => {
+                const card = document.createElement('div');
+                card.className = 'algorithm-card memory-algorithm-card';
+                card.setAttribute('data-algorithm', algorithm.name);
+                card.onclick = () => selectMemoryAlgorithmAndNavigate(algorithm.name);
+
+                card.innerHTML = `
+                    <div class="algorithm-icon" style="background: ${algorithm.color}">
+                        ${algorithm.icon}
+                    </div>
+                    <div class="algorithm-content">
+                        <div class="algorithm-name">${algorithm.name}</div>
+                        <div class="algorithm-full-name">${algorithm.fullName}</div>
+                        <div class="algorithm-desc">${algorithm.description.replace('\\n', '<br>')}</div>
+                    </div>
+                    <div class="selection-indicator">✓</div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Select CPU algorithm
+        function selectCPUAlgorithmAndNavigate(algorithmName) {
+            selectedCPUAlgorithm = algorithmName;
+
+            document.querySelectorAll('#cpu-algorithm-grid .algorithm-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            document.querySelector(`#cpu-algorithm-grid [data-algorithm="${algorithmName}"]`).classList.add('selected');
+
+            document.getElementById('selected-cpu-algorithm-title').textContent = `Selected Algorithm: ${algorithmName}`;
+            document.getElementById('cpu-algorithm-name-display').textContent = algorithmName;
+
+            const algorithm = cpuAlgorithms.find(a => a.name === algorithmName);
+            const quantumSection = document.getElementById('quantum-section');
+            if (algorithm.requiresQuantum) {
+                quantumSection.classList.remove('hidden');
+            } else {
+                quantumSection.classList.add('hidden');
+            }
+
+            initializeCPUProcessTable();
+            enterCPUSimulationMode();
+
+            updateStatus(`Selected ${algorithmName} - Use ➕➖ buttons to manage processes`);
+        }
+
+        // Select Memory algorithm
+        function selectMemoryAlgorithmAndNavigate(algorithmName) {
+            selectedMemoryAlgorithm = algorithmName;
+
+            document.querySelectorAll('#memory-algorithm-grid .algorithm-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            document.querySelector(`#memory-algorithm-grid [data-algorithm="${algorithmName}"]`).classList.add('selected');
+
+            document.getElementById('selected-memory-algorithm-title').textContent = `Selected Algorithm: ${algorithmName}`;
+            document.getElementById('memory-algorithm-name-display').textContent = algorithmName;
+
+            initializeMemoryTables();
+            enterMemorySimulationMode();
+
+            updateStatus(`Selected ${algorithmName} - Configure memory blocks and processes`);
+        }
+
+        // Back to selection functions
+        function goBackToSelection(type) {
+            if (type === 'cpu') {
+                exitAllSimulationModes();
+                showMainTab('cpu-scheduling');
+                updateStatus('Choose a CPU algorithm to continue');
+            } else if (type === 'memory') {
+                exitAllSimulationModes();
+                showMainTab('memory-management');
+                updateStatus('Choose a memory algorithm to continue');
+            }
+        }
+
+        // CPU Process Management (keeping existing functions)
+        function initializeCPUProcessTable() {
+            currentProcessCount = 0;
+            const container = document.getElementById('process-input-container');
+            const algorithm = cpuAlgorithms.find(a => a.name === selectedCPUAlgorithm);
+
+            let tableHTML = `
+                <table class="process-table" id="dynamic-process-table">
+                    <thead>
+                        <tr>
+                            <th>Process ID</th>
+                            <th>Arrival Time</th>
+                            <th>Burst Time</th>
+                            ${algorithm.requiresPriority ? '<th>Priority</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody id="process-table-body">
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHTML;
+
+            for (let i = 0; i < 3; i++) {
+                addProcessRow();
+            }
+        }
+
+        function addProcessRow() {
+            if (currentProcessCount >= 10) {
+                alert('Maximum 10 processes allowed!');
+                return;
+            }
+
+            const tbody = document.getElementById('process-table-body');
+            const algorithm = cpuAlgorithms.find(a => a.name === selectedCPUAlgorithm);
+            const index = currentProcessCount;
+
+            const row = document.createElement('tr');
+            row.id = `process-row-${index}`;
+
+            row.innerHTML = `
+                <td><input type="text" id="pid-${index}" value="P${index + 1}"></td>
+                <td><input type="number" id="arrival-${index}" value="0" min="0"></td>
+                <td><input type="number" id="burst-${index}" value="" min="1" placeholder="Enter burst time"></td>
+                ${algorithm.requiresPriority ? `<td><input type="number" id="priority-${index}" value="${index + 1}" min="1"></td>` : ''}
+            `;
+
+            tbody.appendChild(row);
+            currentProcessCount++;
+            updateProcessCountDisplay();
+
+            updateStatus(`Added process P${currentProcessCount}. Total: ${currentProcessCount} processes`);
+        }
+
+        function removeProcessRow() {
+            if (currentProcessCount <= 1) {
+                alert('At least 1 process is required!');
+                return;
+            }
+
+            const rowToRemove = document.getElementById(`process-row-${currentProcessCount - 1}`);
+            if (rowToRemove) {
+                rowToRemove.remove();
+                currentProcessCount--;
+                updateProcessCountDisplay();
+                updateStatus(`Removed process. Total: ${currentProcessCount} processes`);
+            }
+        }
+
+        function updateProcessCountDisplay() {
+            const display = document.getElementById('process-count-display');
+            if (display) {
+                display.textContent = `Processes: ${currentProcessCount}`;
+            }
+        }
+
+        // Memory Management Functions (keeping existing functions)
+        function initializeMemoryTables() {
+            currentBlockCount = 0;
+            currentMemoryProcessCount = 0;
+
+            const blocksContainer = document.getElementById('memory-blocks-container');
+            let blocksTableHTML = `
+                <table class="process-table memory-table" id="memory-blocks-table">
+                    <thead>
+                        <tr>
+                            <th>Block ID</th>
+                            <th>Block Size (KB)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="memory-blocks-body">
+                    </tbody>
+                </table>
+            `;
+            blocksContainer.innerHTML = blocksTableHTML;
+
+            const processesContainer = document.getElementById('memory-processes-container');
+            let processesTableHTML = `
+                <table class="process-table memory-table" id="memory-processes-table">
+                    <thead>
+                        <tr>
+                            <th>Process Name</th>
+                            <th>Memory Required (KB)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="memory-processes-body">
+                    </tbody>
+                </table>
+            `;
+            processesContainer.innerHTML = processesTableHTML;
+
+            const defaultBlocks = [100, 500, 200, 300, 600];
+            defaultBlocks.forEach(size => addMemoryBlockWithSize(size));
+
+            const defaultProcesses = [
+                { name: 'P1', size: 212 },
+                { name: 'P2', size: 417 },
+                { name: 'P3', size: 112 },
+                { name: 'P4', size: 426 }
+            ];
+            defaultProcesses.forEach(proc => addMemoryProcessWithData(proc.name, proc.size));
+
+            updateMemoryBlocksDisplay();
+        }
+
+        function addMemoryBlock() {
+            addMemoryBlockWithSize('');
+        }
+
+        function addMemoryBlockWithSize(size) {
+            if (currentBlockCount >= 10) {
+                alert('Maximum 10 memory blocks allowed!');
+                return;
+            }
+
+            const tbody = document.getElementById('memory-blocks-body');
+            const index = currentBlockCount;
+
+            const row = document.createElement('tr');
+            row.id = `block-row-${index}`;
+
+            row.innerHTML = `
+                <td><input type="text" id="block-id-${index}" value="B${index + 1}" readonly></td>
+                <td><input type="number" id="block-size-${index}" value="${size}" min="1" placeholder="Enter size" class="memory-input" onchange="updateMemoryBlocksDisplay()"></td>
+            `;
+
+            tbody.appendChild(row);
+            currentBlockCount++;
+            updateBlockCountDisplay();
+
+            updateStatus(`Added memory block B${currentBlockCount}. Total: ${currentBlockCount} blocks`);
+            updateMemoryBlocksDisplay();
+        }
+
+        function removeMemoryBlock() {
+            if (currentBlockCount <= 1) {
+                alert('At least 1 memory block is required!');
+                return;
+            }
+
+            const rowToRemove = document.getElementById(`block-row-${currentBlockCount - 1}`);
+            if (rowToRemove) {
+                rowToRemove.remove();
+                currentBlockCount--;
+                updateBlockCountDisplay();
+                updateStatus(`Removed memory block. Total: ${currentBlockCount} blocks`);
+                updateMemoryBlocksDisplay();
+            }
+        }
+
+        function addMemoryProcess() {
+            addMemoryProcessWithData('', '');
+        }
+
+        function addMemoryProcessWithData(name, size) {
+            if (currentMemoryProcessCount >= 15) {
+                alert('Maximum 15 memory processes allowed!');
+                return;
+            }
+
+            const tbody = document.getElementById('memory-processes-body');
+            const index = currentMemoryProcessCount;
+
+            const row = document.createElement('tr');
+            row.id = `memory-process-row-${index}`;
+
+            row.innerHTML = `
+                <td><input type="text" id="process-name-${index}" value="${name || 'P' + (index + 1)}" class="memory-input"></td>
+                <td><input type="number" id="process-size-${index}" value="${size}" min="1" placeholder="Enter size" class="memory-input"></td>
+            `;
+
+            tbody.appendChild(row);
+            currentMemoryProcessCount++;
+            updateMemoryCountDisplay();
+
+            updateStatus(`Added memory process. Total: ${currentMemoryProcessCount} processes`);
+        }
+
+        function removeMemoryProcess() {
+            if (currentMemoryProcessCount <= 1) {
+                alert('At least 1 memory process is required!');
+                return;
+            }
+
+            const rowToRemove = document.getElementById(`memory-process-row-${currentMemoryProcessCount - 1}`);
+            if (rowToRemove) {
+                rowToRemove.remove();
+                currentMemoryProcessCount--;
+                updateMemoryCountDisplay();
+                updateStatus(`Removed memory process. Total: ${currentMemoryProcessCount} processes`);
+            }
+        }
+
+        function updateBlockCountDisplay() {
+            const display = document.getElementById('block-count-display');
+            if (display) {
+                display.textContent = `Blocks: ${currentBlockCount}`;
+            }
+        }
+
+        function updateMemoryCountDisplay() {
+            const display = document.getElementById('memory-count-display');
+            if (display) {
+                display.textContent = `Processes: ${currentMemoryProcessCount}`;
+            }
+        }
+
+        function updateMemoryBlocksDisplay() {
+            const display = document.getElementById('memory-blocks-display');
+            const blocks = collectMemoryBlocks();
+
+            if (blocks.length === 0) {
+                display.innerHTML = '<div style="text-align: center; color: var(--text-secondary); width: 100%;">Add memory blocks to see them here</div>';
+                return;
+            }
+
+            let html = '';
+            blocks.forEach((block, index) => {
+                if (block.size && block.size > 0) {
+                    html += `
+                        <div class="memory-block-visual" title="Block ${block.id}: ${block.size} KB">
+                            ${block.id}<br>${block.size} KB
+                        </div>
+                    `;
+                }
+            });
+
+            if (html === '') {
+                html = '<div style="text-align: center; color: var(--text-secondary); width: 100%;">Enter block sizes to see visualization</div>';
+            }
+
+            display.innerHTML = html;
+        }
+
+        // Data Collection Functions
+        function collectCPUProcessData() {
+            const processes = [];
+            const algorithm = cpuAlgorithms.find(a => a.name === selectedCPUAlgorithm);
+
+            for (let i = 0; i < currentProcessCount; i++) {
+                const pidElement = document.getElementById(`pid-${i}`);
+                const arrivalElement = document.getElementById(`arrival-${i}`);
+                const burstElement = document.getElementById(`burst-${i}`);
+
+                if (!pidElement || !arrivalElement || !burstElement) continue;
+
+                const pid = pidElement.value || `P${i + 1}`;
+                const arrival = parseInt(arrivalElement.value) || 0;
+                const burst = parseInt(burstElement.value);
+
+                if (!burst || burst <= 0 || isNaN(burst)) {
+                    alert(`Please enter a valid burst time for ${pid}`);
+                    return null;
+                }
+
+                const process = { pid, arrival, burst };
+
+                if (algorithm.requiresPriority) {
+                    const priorityElement = document.getElementById(`priority-${i}`);
+                    process.priority = parseInt(priorityElement.value) || 1;
+                }
+
+                processes.push(process);
+            }
+
+            return processes;
+        }
+
+        function collectMemoryBlocks() {
+            const blocks = [];
+
+            for (let i = 0; i < currentBlockCount; i++) {
+                const blockIdElement = document.getElementById(`block-id-${i}`);
+                const blockSizeElement = document.getElementById(`block-size-${i}`);
+
+                if (!blockIdElement || !blockSizeElement) continue;
+
+                const blockId = blockIdElement.value || `B${i + 1}`;
+                const blockSize = parseInt(blockSizeElement.value);
+
+                if (blockSize && blockSize > 0) {
+                    blocks.push({
+                        id: blockId,
+                        size: blockSize
+                    });
+                }
+            }
+
+            return blocks;
+        }
+
+        function collectMemoryProcesses() {
+            const processes = [];
+
+            for (let i = 0; i < currentMemoryProcessCount; i++) {
+                const processNameElement = document.getElementById(`process-name-${i}`);
+                const processSizeElement = document.getElementById(`process-size-${i}`);
+
+                if (!processNameElement || !processSizeElement) continue;
+
+                const processName = processNameElement.value || `P${i + 1}`;
+                const processSize = parseInt(processSizeElement.value);
+
+                if (!processSize || processSize <= 0 || isNaN(processSize)) {
+                    alert(`Please enter a valid memory size for ${processName}`);
+                    return null;
+                }
+
+                processes.push({
+                    name: processName,
+                    size: processSize
+                });
+            }
+
+            return processes;
+        }
+
+        // CPU Scheduling Algorithms (keeping existing implementations)
+        function runFCFS(processes) {
+            processes.sort((a, b) => a.arrival - b.arrival);
+            let time = 0;
+            const gantt = [];
+            let totalWT = 0, totalTAT = 0;
+            const results = [];
+
+            processes.forEach(p => {
+                const start = Math.max(time, p.arrival);
+                const end = start + p.burst;
+                const wt = start - p.arrival;
+                const tat = end - p.arrival;
+
+                totalWT += wt;
+                totalTAT += tat;
+                gantt.push({ pid: p.pid, start, end });
+                results.push({ ...p, start, end, waitingTime: wt, turnaroundTime: tat });
+                time = end;
+            });
+
+            return {
+                gantt,
+                avgWaitingTime: totalWT / processes.length,
+                avgTurnaroundTime: totalTAT / processes.length,
+                processDetails: results,
+                totalTime: time
+            };
+        }
+
+        function runSJF(processes) {
+            let time = 0;
+            const gantt = [];
+            let totalWT = 0, totalTAT = 0;
+            const completed = [];
+            const results = [];
+
+            while (completed.length < processes.length) {
+                const available = processes.filter(p => !completed.includes(p) && p.arrival <= time);
+                if (available.length === 0) {
+                    time++;
+                    continue;
+                }
+
+                const shortest = available.reduce((prev, curr) =>
+                    curr.burst < prev.burst ? curr : prev
+                );
+
+                const start = time;
+                const end = time + shortest.burst;
+                const wt = start - shortest.arrival;
+                const tat = end - shortest.arrival;
+
+                totalWT += wt;
+                totalTAT += tat;
+                gantt.push({ pid: shortest.pid, start, end });
+                results.push({ ...shortest, start, end, waitingTime: wt, turnaroundTime: tat });
+                completed.push(shortest);
+                time = end;
+            }
+
+            return {
+                gantt,
+                avgWaitingTime: totalWT / processes.length,
+                avgTurnaroundTime: totalTAT / processes.length,
+                processDetails: results,
+                totalTime: time
+            };
+        }
+
+        function runSRTF(processes) {
+            let time = 0;
+            const gantt = [];
+            const remaining = {};
+            processes.forEach(p => remaining[p.pid] = p.burst);
+
+            let lastPid = null;
+            const completed = {};
+            let totalWT = 0, totalTAT = 0;
+
+            while (Object.keys(completed).length < processes.length) {
+                const arrived = processes.filter(p => p.arrival <= time && !completed[p.pid]);
+                const available = arrived.filter(p => remaining[p.pid] > 0);
+
+                if (available.length > 0) {
+                    const current = available.reduce((prev, curr) =>
+                        remaining[curr.pid] < remaining[prev.pid] ? curr : prev
+                    );
+
+                    if (lastPid !== current.pid) {
+                        if (lastPid !== null && gantt.length > 0) {
+                            gantt[gantt.length - 1].end = time;
+                        }
+                        gantt.push({ pid: current.pid, start: time, end: null });
+                        lastPid = current.pid;
+                    }
+
+                    remaining[current.pid]--;
+                    if (remaining[current.pid] === 0) {
+                        completed[current.pid] = time + 1;
+                        if (gantt.length > 0) {
+                            gantt[gantt.length - 1].end = time + 1;
+                        }
+                    }
+                }
+                time++;
+            }
+
+            const results = [];
+            processes.forEach(p => {
+                const tat = completed[p.pid] - p.arrival;
+                const wt = tat - p.burst;
+                totalTAT += tat;
+                totalWT += wt;
+                results.push({ ...p, start: p.arrival + wt, end: completed[p.pid], waitingTime: wt, turnaroundTime: tat });
+            });
+
+            return {
+                gantt,
+                avgWaitingTime: totalWT / processes.length,
+                avgTurnaroundTime: totalTAT / processes.length,
+                processDetails: results,
+                totalTime: time
+            };
+        }
+
+        function runRR(processes, quantum) {
+            let time = 0;
+            const gantt = [];
+            const ready = [];
+            const remaining = {};
+            processes.forEach(p => remaining[p.pid] = p.burst);
+
+            const executed = {};
+            let queue = [...processes].sort((a, b) => a.arrival - b.arrival);
+            let totalWT = 0, totalTAT = 0;
+
+            while (queue.length > 0 || ready.length > 0 || Object.values(remaining).some(r => r > 0)) {
+                const newArrivals = queue.filter(p => p.arrival <= time);
+                ready.push(...newArrivals);
+                queue = queue.filter(p => p.arrival > time);
+
+                if (ready.length === 0) {
+                    time++;
+                    continue;
+                }
+
+                const current = ready.shift();
+                if (remaining[current.pid] <= 0) continue;
+
+                const executeTime = Math.min(quantum, remaining[current.pid]);
+                gantt.push({ pid: current.pid, start: time, end: time + executeTime });
+                time += executeTime;
+                remaining[current.pid] -= executeTime;
+
+                if (remaining[current.pid] > 0) {
+                    ready.push(current);
+                } else {
+                    executed[current.pid] = time;
+                }
+            }
+
+            const results = [];
+            processes.forEach(p => {
+                const tat = executed[p.pid] - p.arrival;
+                const wt = tat - p.burst;
+                totalTAT += tat;
+                totalWT += wt;
+                results.push({ ...p, start: p.arrival + wt, end: executed[p.pid], waitingTime: wt, turnaroundTime: tat });
+            });
+
+            return {
+                gantt,
+                avgWaitingTime: totalWT / processes.length,
+                avgTurnaroundTime: totalTAT / processes.length,
+                processDetails: results,
+                totalTime: time,
+                timeQuantum: quantum
+            };
+        }
+
+        function runPriority(processes) {
+            let time = 0;
+            const gantt = [];
+            let totalWT = 0, totalTAT = 0;
+            const completed = [];
+            const results = [];
+
+            while (completed.length < processes.length) {
+                const available = processes.filter(p => !completed.includes(p) && p.arrival <= time);
+                if (available.length === 0) {
+                    time++;
+                    continue;
+                }
+
+                const highest = available.reduce((prev, curr) =>
+                    curr.priority < prev.priority ? curr : prev
+                );
+
+                const start = time;
+                const end = time + highest.burst;
+                const wt = start - highest.arrival;
+                const tat = end - highest.arrival;
+
+                totalWT += wt;
+                totalTAT += tat;
+                gantt.push({ pid: highest.pid, start, end });
+                results.push({ ...highest, start, end, waitingTime: wt, turnaroundTime: tat });
+                completed.push(highest);
+                time = end;
+            }
+
+            return {
+                gantt,
+                avgWaitingTime: totalWT / processes.length,
+                avgTurnaroundTime: totalTAT / processes.length,
+                processDetails: results,
+                totalTime: time
+            };
+        }
+
+        // CPU Simulation Function
+        function runCPUSimulation() {
+            if (!selectedCPUAlgorithm) {
+                alert('Please select a CPU algorithm first!');
+                return;
+            }
+
+            const processes = collectCPUProcessData();
+            if (!processes) return;
+
+            updateStatus('Running CPU simulation...');
+
+            let results;
+
+            try {
+                switch (selectedCPUAlgorithm) {
+                    case 'FCFS':
+                        results = runFCFS(processes);
+                        break;
+                    case 'SJF':
+                        results = runSJF(processes);
+                        break;
+                    case 'SRTF':
+                        results = runSRTF(processes);
+                        break;
+                    case 'RR':
+                        const quantum = parseInt(document.getElementById('time-quantum').value);
+                        if (!quantum || quantum <= 0) {
+                            alert('Please enter a valid time quantum!');
+                            return;
+                        }
+                        results = runRR(processes, quantum);
+                        break;
+                    case 'Priority':
+                        results = runPriority(processes);
+                        break;
+                    default:
+                        alert('Unknown algorithm selected!');
+                        return;
+                }
+
+                displayCPUResults(results);
+                addToHistory('CPU', selectedCPUAlgorithm, processes.length, results.avgWaitingTime, results.avgTurnaroundTime);
+                showSimTab('cpu-results');
+
+                updateStatus('CPU simulation completed successfully');
+            } catch (error) {
+                alert('An error occurred during CPU simulation: ' + error.message);
+                updateStatus('CPU simulation failed');
+            }
+        }
+
+        // Memory Simulation Function
+        function runMemorySimulation() {
+            if (!selectedMemoryAlgorithm) {
+                alert('Please select a memory algorithm first!');
+                return;
+            }
+
+            const blocks = collectMemoryBlocks();
+            const processes = collectMemoryProcesses();
+
+            if (blocks.length === 0) {
+                alert('Please add at least one memory block!');
+                return;
+            }
+
+            if (!processes) return;
+
+            updateStatus('Running memory simulation...');
+
+            try {
+                const blockSizes = blocks.map(block => block.size);
+                const allocator = new MemoryAllocator(blockSizes);
+
+                let results;
+                switch (selectedMemoryAlgorithm) {
+                    case 'First Fit':
+                        results = allocator.firstFit(processes);
+                        break;
+                    case 'Best Fit':
+                        results = allocator.bestFit(processes);
+                        break;
+                    case 'Worst Fit':
+                        results = allocator.worstFit(processes);
+                        break;
+                    default:
+                        alert('Unknown algorithm selected!');
+                        return;
+                }
+
+                const metrics = allocator.getMetrics(results);
+                const simulationData = {
+                    algorithm: selectedMemoryAlgorithm,
+                    blocks: blocks,
+                    processes: processes,
+                    results: results,
+                    metrics: metrics,
+                    allocatedBlocks: allocator.blocks
+                };
+
+                displayMemoryResults(simulationData);
+                addToHistory('Memory', selectedMemoryAlgorithm, processes.length,
+                    parseFloat(metrics.allocationRate),
+                    parseFloat(metrics.totalInternalFragmentation));
+                showMemorySimTab('memory-results');
+
+                updateStatus('Memory simulation completed successfully');
+            } catch (error) {
+                alert('An error occurred during memory simulation: ' + error.message);
+                updateStatus('Memory simulation failed');
+            }
+        }
+
+        // Display CPU Results with Animated Gantt Chart
+        function displayCPUResults(results) {
+            const container = document.getElementById('cpu-results-content');
+
+            const html = `
+                <div class="card fade-in">
+                    <h2>CPU Simulation Results - ${selectedCPUAlgorithm}</h2>
+                    <button class="back-button" onclick="goBackToSelection('cpu')">← Back to CPU Algorithms</button>
+                </div>
+
+                <div class="metrics-grid fade-in">
+                    <div class="metric-card">
+                        <div class="metric-icon">⏱️</div>
+                        <div class="metric-value">${results.avgWaitingTime.toFixed(2)}</div>
+                        <div class="metric-label">Average Waiting Time</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">🔄</div>
+                        <div class="metric-value">${results.avgTurnaroundTime.toFixed(2)}</div>
+                        <div class="metric-label">Average Turnaround Time</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">⏰</div>
+                        <div class="metric-value">${results.totalTime}</div>
+                        <div class="metric-label">Total Execution Time</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">📋</div>
+                        <div class="metric-value">${results.processDetails.length}</div>
+                        <div class="metric-label">Number of Processes</div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <h3>🎬 Animated Gantt Chart Visualization</h3>
+                    <p>Watch processes execute in real-time! Use the controls below to play, pause, and control the speed of the animation.</p>
+                    <div class="gantt-chart">
+                        ${createAnimatedGanttChart(results.gantt)}
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <h3>Process Details</h3>
+                    ${createResultsTable(results.processDetails)}
+                </div>
+            `;
+
+            container.innerHTML = html;
+
+            // Initialize animation controls
+            updateAnimationSpeed();
+            updateAnimationControls();
+        }
+
+        // Display Memory Results (same as before)
+        function displayMemoryResults(data) {
+            const container = document.getElementById('memory-results-content');
+
+            const html = `
+                <div class="card memory-card fade-in">
+                    <h2>Memory Simulation Results - ${selectedMemoryAlgorithm}</h2>
+                    <button class="back-button memory-back-button" onclick="goBackToSelection('memory')">← Back to Memory Algorithms</button>
+                </div>
+
+                <div class="metrics-grid fade-in">
+                    <div class="metric-card memory-metric-card">
+                        <div class="metric-icon">✅</div>
+                        <div class="metric-value">${data.metrics.allocationRate}%</div>
+                        <div class="metric-label">Allocation Success Rate</div>
+                    </div>
+                    <div class="metric-card memory-metric-card">
+                        <div class="metric-icon">📊</div>
+                        <div class="metric-value">${data.metrics.allocatedProcesses}/${data.metrics.totalProcesses}</div>
+                        <div class="metric-label">Processes Allocated</div>
+                    </div>
+                    <div class="metric-card memory-metric-card">
+                        <div class="metric-icon">🧩</div>
+                        <div class="metric-value">${data.metrics.totalInternalFragmentation}</div>
+                        <div class="metric-label">Internal Fragmentation (KB)</div>
+                    </div>
+                    <div class="metric-card memory-metric-card">
+                        <div class="metric-icon">📦</div>
+                        <div class="metric-value">${data.metrics.memoryUtilization}%</div>
+                        <div class="metric-label">Memory Utilization</div>
+                    </div>
+                </div>
+
+                <div class="card memory-card fade-in">
+                    <h3>Memory Block Allocation Status</h3>
+                    <div class="memory-visualization">
+                        ${createMemoryAllocationVisualization(data)}
+                    </div>
+                </div>
+
+                <div class="card memory-card fade-in">
+                    <h3>Process Allocation Results</h3>
+                    ${createMemoryAllocationTable(data.results)}
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Create Memory Allocation Visualization (same as before)
+        function createMemoryAllocationVisualization(data) {
+            let html = '<div class="memory-blocks-display">';
+
+            data.allocatedBlocks.forEach((block, index) => {
+                const isAllocated = block.allocated;
+                const blockClass = isAllocated ? 'allocated' : '';
+                const blockContent = isAllocated ?
+                    `${block.processId}<br>${block.size} KB` :
+                    `B${index + 1}<br>${block.size} KB`;
+
+                html += `
+                    <div class="memory-block-visual ${blockClass}" 
+                         title="${isAllocated ? 'Allocated to ' + block.processId : 'Free block'} - ${block.size} KB">
+                        ${blockContent}
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+
+            html += '<div class="allocation-result">';
+            html += '<h4>Allocation Summary:</h4>';
+
+            data.results.forEach(result => {
+                html += `
+                    <div class="allocation-item">
+                        <span class="allocation-process">${result.process.name} (${result.process.size} KB)</span>
+                        <span class="allocation-status ${result.allocated ? 'success' : 'failed'}">
+                            ${result.allocated ?
+                        `Allocated to Block ${result.blockId + 1} (${result.blockSize} KB)` :
+                        'Not Allocated - No suitable block found'
+                    }
+                        </span>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+
+            return html;
+        }
+
+        // Create Memory Allocation Results Table (same as before)
+        function createMemoryAllocationTable(results) {
+            let tableHTML = `
+                <table class="process-table memory-table">
+                    <thead>
+                        <tr>
+                            <th>Process</th>
+                            <th>Required (KB)</th>
+                            <th>Status</th>
+                            <th>Allocated Block</th>
+                            <th>Block Size (KB)</th>
+                            <th>Internal Fragmentation (KB)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            results.forEach(result => {
+                const statusColor = result.allocated ? 'var(--success-color)' : 'var(--danger-color)';
+                const statusText = result.allocated ? '✅ Allocated' : '❌ Failed';
+                const blockInfo = result.allocated ? `Block ${result.blockId + 1}` : '-';
+                const blockSize = result.allocated ? result.blockSize : '-';
+                const fragmentation = result.allocated ? result.internalFragmentation : '-';
+
+                tableHTML += `
+                    <tr>
+                        <td>${result.process.name}</td>
+                        <td>${result.process.size}</td>
+                        <td style="color: ${statusColor}; font-weight: bold;">${statusText}</td>
+                        <td>${blockInfo}</td>
+                        <td>${blockSize}</td>
+                        <td>${fragmentation}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            return tableHTML;
+        }
+
+        // Create CPU Results Table (same as before)
+        function createResultsTable(processDetails) {
+            let tableHTML = `
+                <table class="process-table">
+                    <thead>
+                        <tr>
+                            <th>PID</th>
+                            <th>Arrival</th>
+                            <th>Burst</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Waiting</th>
+                            <th>Turnaround</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            processDetails.forEach(process => {
+                tableHTML += `
+                    <tr>
+                        <td>${process.pid}</td>
+                        <td>${process.arrival}</td>
+                        <td>${process.burst}</td>
+                        <td>${process.start}</td>
+                        <td>${process.end}</td>
+                        <td>${process.waitingTime}</td>
+                        <td>${process.turnaroundTime}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            return tableHTML;
+        }
+
+        // History Management (same as before)
+        function addToHistory(type, algorithm, itemCount, primaryMetric, secondaryMetric) {
+            const historyEntry = {
+                timestamp: new Date().toLocaleString(),
+                type: type,
+                algorithm: algorithm,
+                itemCount: itemCount,
+                primaryMetric: primaryMetric.toFixed(2),
+                secondaryMetric: secondaryMetric.toFixed(2)
+            };
+
+            simulationHistory.unshift(historyEntry);
+
+            if (simulationHistory.length > 50) {
+                simulationHistory = simulationHistory.slice(0, 50);
+            }
+
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const tbody = document.getElementById('history-tbody');
+
+            if (simulationHistory.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-secondary);">
+                            No simulation history yet. Run some simulations to see them here.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            simulationHistory.forEach(entry => {
+                const unit1 = entry.type === 'CPU' ? 'ms' : '%';
+                const unit2 = entry.type === 'CPU' ? 'ms' : 'KB';
+
+                html += `
+                    <tr>
+                        <td>${entry.timestamp}</td>
+                        <td style="color: ${entry.type === 'CPU' ? 'var(--classic-blue)' : 'var(--memory-color)'}">${entry.type}</td>
+                        <td>${entry.algorithm}</td>
+                        <td>${entry.itemCount}</td>
+                        <td>${entry.primaryMetric}${unit1}</td>
+                        <td>${entry.secondaryMetric}${unit2}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // Utility Functions
+        function updateStatus(message) {
+            document.getElementById('status-text').textContent = message;
+        }
+
+        function showHelp() {
+            const helpText = `ALGOS - Comprehensive Operating System Simulator
+
+🖥️ CPU SCHEDULING:
+• FCFS, SJF, SRTF, Round Robin, Priority algorithms
+• 🎬 ANIMATED GANTT CHARTS with real-time process execution
+• Interactive controls: Play, Pause, Reset, Speed adjustment
+• Visual time indicator showing current execution time
+
+💾 MEMORY MANAGEMENT:
+• First Fit, Best Fit, Worst Fit allocation algorithms
+• User-defined memory blocks and processes
+• Real allocation simulation matching C++ algorithms
+• Detailed fragmentation analysis and success rates
+
+🎯 New Animation Features:
+• Watch processes execute in real-time
+• Adjustable animation speed (slow to fast)
+• Current time indicator with red line
+• Active process highlighting with glow effects
+• Smooth bar growth animations
+
+✨ Enhanced Memory Features:
+• Based on classic C++ implementations
+• Two-column layout for blocks and processes
+• Real-time visual preview of memory blocks
+• Comprehensive allocation results with success rates
+
+🔧 Animation Controls:
+• ▶️ Play: Start the animation
+• ⏸️ Pause: Pause at any time
+• 🔄 Reset: Go back to beginning
+• Speed slider: Control animation speed
+
+📊 Features:
+• Unified interface for both CPU and memory algorithms
+• Real-time process/block counters
+• Interactive visualizations with hover effects
+• Comprehensive simulation history
+• Dark/Light theme support
+• Responsive design for all devices
+
+Made with ❤️ by ALGOS Team - Animated Gantt Charts v5.0`;
+
+            alert(helpText);
+        }
+    </script>
+</body>
+
+</html>
